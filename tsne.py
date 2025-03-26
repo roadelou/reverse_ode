@@ -45,7 +45,9 @@ plt.savefig(f"pca.full.{N}.png")
 for combination, score_tuples in SCORES.items():
 	print(combination)
 	coefs, score_lists = zip(*score_tuples)
-	final_scores = [score_list[-1] for score_list in score_lists]
+	final_scores = [score_list[1] for score_list in score_lists]
+	print(final_scores[0])
+	print(np.mean(final_scores))
 	projected_coefs = pca.transform(np.array(coefs))
 	X, Y = zip(*projected_coefs)
 	plt.clf()
