@@ -21,8 +21,11 @@ In this study we will only look at N=2 (for a simple case where we can interpret
 With an example, given the following time series:
 ![time_serie](img/time_serie.png)
 
-I would need to find that it satifies the equations:
-<insert equation>
+I would need to find that it satisfies the equation:
+![explicit_eq_diff](img/explicit_eq_diff.png)
+
+If you are curious, the analytic solution is:
+![analytic](img/eq_analytic.png)
 
 This clearly a synthetic problem, and while it could have some use cases in pratice what I like in this problem is that it is rather difficult but easy to produce data for.
 
@@ -39,10 +42,10 @@ Given a differential equation, we can use a numerical scheme like the ones provi
 In a nutshell, the way those solvers work is that they use a more complex version of [euler's integration scheme](https://en.wikipedia.org/wiki/Euler_method) to integrate the diffirential equation and thus compute the time series. The algorithms used are typically variants of the [Runge-Kutta methods](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods).
 
 Assuming we want to solve the following equation:
-<insert equation>
+![explicit_eq_diff](img/explicit_eq_diff.png)
 
 We would need to put it in a matrix form for `scipy.integrate.solve_ivp`, which would look like:
-<insert matrix form>
+![matrix_eq](img/matrix_eq.png)
 
 Since we have a way to solve the differential equations, we can build a database by drawing random equations (using a uniform distribution of coefficients between -1 and 1) and solving them. In my case I produced 100k equations to train the models, which takes a few minutes on my laptop.
 
@@ -84,7 +87,7 @@ You might be surprised by the fact that the solvers would give up when I directl
  - We can compute the gradient in case of a neural network optimization, which helps the solver a lot. This is handled by pytorch under the hood, I won't be computing the gradients myself.
 
 For this first attempt, since our input isn't too large, my strategy was to simply use dense layers to leave the model as much room as possible to model the behavior we are interested in. But since my laptop doesn't have a powerful dedicated GPU I had to restrict the number of neurons, the compromise I landed on was:
-<Add image of the network>
+![simplenn_model](img/simplenn_model.png)
 
 When training this model, most of the time with 5th order ODEs I would get `MSE = 0.333...`, meaning that the network could not see the link between the time series and the coefficients, which isn't so surprising given that the problem is quite hard. But after a few trials I managed to get:
  - `MSE = 0.22` for N = 2,
@@ -107,10 +110,10 @@ The way this approach translates to our problem is that instead of trying to sol
  - We solve the ODE for the new guess and repeat the process multiple time, hopefully converging to the solution.
 
 To explain on an example, before we would give to the NN the time series and ask it for the coefficients:
-<insert image of the time series>
+![time_serie_again](img/time_serie.png)
 
 Now what we will go is give it the time series, the coefficients for the current guess and the time series for the new guess, and ask it what it thinks the coefficients for the solution could be.
-<insert image with the two time series and the guessed coefficients>
+![close_guess](img/close_guess.png)
 
 This second problem should be easier if it is linearisable, aka if the impact of the coefficients of the ODE on the distance with the time series is derivable. I cannot prove that it is, but is stands to reason that it would be!
 
@@ -140,7 +143,7 @@ The second trick I decided to use is that NN can be made to be multimodal. In my
  - The other input is the previous guess, which only go through the few final dense layers, since we expect it to only have slight modifications.
 
 The final architecture for my NN was as follows:
-<architecture of the final NN>
+![reinforcement_model](img/reinforcement_model.png)
 
 Using this network and letting it iterate one time on its guesses I could get:
  - `MSE = 0.24` with N=2 if the initial guess was zero
@@ -162,17 +165,17 @@ A few interesting notes on those results:
 One surprising results from my trial is that the linear regression is doing really well on this problem. This is not a trivial problem, even with some efforts I cannot make a small NN which can learn it as well, and the problem is difficult enough that the solver gives up on it. So how comes such a simple heuristic is working so well?!
 
 To understand what is going on, we can look at the case where N=2 and try to visualize how well the linear model is able to guess the coefficients for each problem we give it. For each point we know that it follows an equation of the form:
-<insert second order ODE formula>
+![generic_ode](img/generic_eq.png)
 
 What I have plotted is for each equation:
- - As X the value of the first coefficient a,
- - As Y the value of the second coefficient b,
+ - As X the value of the first coefficient `a`,
+ - As Y the value of the second coefficient `b`,
  - I am discarding the inital conditions,
  - As color I am plotting the MSE between the real coefficients and the ones guessed by the model.
-<insert image of the heatmap of linear model>
+![linear_heatmap](img/linear.png)
 
 Here we can see that the linear model is clearly biased, it is good at finding the coefficients when a and b are small but it struggles when the coefficients get larger... Let's take a moment to investigate why, by looking at the form of the solutions when a and b are equal to zero. The equation becomes:
-<insert differential equation with zero coefs>
+![zero_eq](img/zero_eq.png)
 
 Whose solutions take the form `f(x) = c*x + d`... This is not just a linear regression, it is THE linear regression!
 
@@ -182,14 +185,14 @@ We can loop this conclusion with an early choice in the project, I decided to li
 
 # Is the ML-based approach interesting for this problem?
 Now that we know that the linear regression is exploiting a flaw in my dataset, we can look again at my NN-based solution to assess its performance again. If we make the same plot as the one we presented above for the linear model but for the simple NN model (without reinforcement learning), here is what we get:
-(insert heatmap of the simple NN)
+![simplenn_heatmap](img/simplenn.png)
 
 We can also do the same heatmap after applying 10 iterations of the reinforcement learning NN.
-(insert heatmap with the reinforcment learning)
+![reinforcement_heatmap](img/reinforcement.png)
 
 We can clearly see that the NN-based approach is not performing well (or poorly) on the same ODEs as the linear regression model, and the NN-based approach is winning in some cases. To me this clearly shows that the NN has learned a different strategy that the linear model couldn't capture, it isn't following a worse polynom-based strategy.
 
 # Conclusion
 The fact that our NN could capture a different strategy compared to the linear model is very interesting, because the linear model is rigid, I don't think I could get it to model well for larger coefficients. The NN on the other hand shows signs on the bottom left of the plot that it can capture correct behaviors for larger coefficients. This hints that a NN based approach might perform better than the linear model on a more complete version of the problem, in particular with larger coefficients.
 
-Achieving such results would be quite complex, likely I underestimated how much data and compute power would be needed to train such a neural network. This little project also shows how using reinformcement-based learning can make some problems easier to solve.
+Achieving such results would be quite complex, likely I underestimated how much data and compute power would be needed to train such a neural network. This little project also shows how using reinformcement-based learning can make some problems easier to solve, and my mistakes highlight how training the network in a specific way is important to ensure good learning.
