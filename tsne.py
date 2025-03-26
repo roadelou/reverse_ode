@@ -52,5 +52,12 @@ for combination, score_tuples in SCORES.items():
 	plt.scatter(X, Y, c=final_scores)
 	plt.colorbar()
 	plt.clim(0, 1)
-	plt.title(combination)
+	title = combination
+	if combination == "lin/zero":
+		title = "Linear Model"
+	elif combination == "nn/zero":
+		title = "Simple NN"
+	elif combination == "nn/nn":
+		title = "Simple NN + Reinforcement Learning"
+	plt.title(title)
 	plt.savefig(f"pca.{combination.replace('/','.')}.{N}.png")

@@ -12,7 +12,7 @@ For this work we are going to restrict a bit the problem to make the study last 
 
 Given an integer N, the order of our differential equation,
 Given a time series T where,
- - The X values are a thousand points rangin from 0 to 1,
+ - The X values are a thousand points ranging from 0 to 1,
  - The Y values are the solution of a homogeneous differential equation with constant coefficients in the range [-1, 1] and initial conditions in the range [-1, 1],
 Find the N coefficients of the differential equation and the N initial conditions that the time series satisfies.
 

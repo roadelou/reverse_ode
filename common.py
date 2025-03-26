@@ -1,5 +1,5 @@
 # The order of the equation.
-N = 5
+N = 2
 
 # The number of iteration for the solvers.
 M = 10
