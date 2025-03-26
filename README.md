@@ -19,7 +19,7 @@ Find the N coefficients of the differential equation and the N initial condition
 In this study we will only look at N=2 (for a simple case where we can interpret the results) and N=5 (for a more challenging case).
 
 With an example, given the following time series:
-<insert image>
+![time_serie](img/time_serie.png)
 
 I would need to find that it satifies the equations:
 <insert equation>
@@ -142,7 +142,7 @@ The second trick I decided to use is that NN can be made to be multimodal. In my
 The final architecture for my NN was as follows:
 <architecture of the final NN>
 
-Using this network and letting it iterate 10 times on its guesses I could get:
+Using this network and letting it iterate one time on its guesses I could get:
  - `MSE = 0.24` with N=2 if the initial guess was zero
  - `MSE = 0.18` with N=2 if the initial guess was from the NN I mentioned in the first part
  - `MSE = 0.17` with N=2 if the initial guess was from linear regression
@@ -156,6 +156,7 @@ A few interesting notes on those results:
  - When we feed it results from the optimizer, the NN doesn't degrade the accuracy of the results. This is likely because the results from the optimizer are so close to the real ones that we end up with zero error on the time series. The NN might have understood from its training that the larger the error the more it should correct, which would be what we expect.
  - The results are at best on par with with results from the linear model, and often worse.
  - The reinforcement learning-based approach outperforms our traditional neural network, as expected. Then again the second model is more refined with convolutions, so it is hard to tell the exact impact of reinforcement learning.
+ - At first I tried to iterate more than one time, most of the time it would work well but sometimes the error would be huge. This is likely because I cheated during the training, all of it was made of single iterations, we lose the long-term goal which is the core of reinforcement learning. Lesson learned for next time!
 
 # Why is the Linear Regression working so well?
 One surprising results from my trial is that the linear regression is doing really well on this problem. This is not a trivial problem, even with some efforts I cannot make a small NN which can learn it as well, and the problem is difficult enough that the solver gives up on it. So how comes such a simple heuristic is working so well?!
